@@ -264,17 +264,65 @@
    * Second, breadth-then-depth is better exam prep than finishing one topic at
    * a time: you find out early what you already know, and repeat exposure
    * spaced across the material beats one long block on each. */
-  function nextTopic() {
-    var settings = Store.settings();
-    if (!settings.route) return null;
-    var rows = routeTopics(settings.route);
-
+  function firstAtLowestLevel(rows) {
     for (var level = 0; level < 3; level++) {
       for (var i = 0; i < rows.length; i++) {
         if (Store.confidence(rows[i].topic.id) === level) return rows[i];
       }
     }
     return null;
+  }
+
+  function nextTopic() {
+    var settings = Store.settings();
+
+    /* An explicit focus wins. Falls through once that exam is finished rather
+     * than dead-ending on it. */
+    if (settings.focusExam) {
+      var picked = firstAtLowestLevel(topicsOf(settings.focusExam));
+      if (picked) return picked;
+    }
+
+    if (!settings.route) return null;
+    return firstAtLowestLevel(routeTopics(settings.route));
+  }
+
+  /* Exams you can actually start today.
+   *
+   * Anything in `alsoDoing` is available immediately — DP-700 has no
+   * relationship to the AZ-800/801/802 fork, so gating it behind that decision
+   * was just a way to make "I want to do some work" impossible on a day when
+   * the decision felt too big. The Windows Server exams stay gated because
+   * until you pick a route, nobody knows which one you would be studying. */
+  function availableExams() {
+    var settings = Store.settings();
+    var codes = (PEBKAC.PLAN.alsoDoing || []).slice();
+    if (settings.route) {
+      codes = routeExamCodes(settings.route).filter(function (c, i, a) {
+        return a.indexOf(c) === i;
+      });
+    }
+    return codes;
+  }
+
+  /* Small, low-prominence, and only shown when there is a real choice — a
+   * switcher on the home screen is one decision away from being the menu this
+   * page exists to avoid. */
+  function focusSwitcher(currentCode) {
+    var codes = availableExams();
+    if (codes.length < 2) return '';
+
+    /* Current exam first, then the alternatives — otherwise plan order can
+     * render "Working on switch to AZ-802 · DP-700", which parses as nonsense. */
+    var others = codes.filter(function (code) { return code !== currentCode; });
+
+    return '<p class="focus">Working on <strong>' + esc(currentCode) + '</strong>' +
+      (others.length
+        ? ' · ' + others.map(function (code) {
+            return '<button class="linkish" data-action="focus" data-exam="' + esc(code) + '">switch to ' + esc(code) + '</button>';
+          }).join(' · ')
+        : '') +
+      '</p>';
   }
 
   /* Pack remaining topics into weeks at the current budget. Topics split
@@ -344,16 +392,25 @@
   function viewNow() {
     var settings = Store.settings();
 
-    if (!settings.route) {
+    var next = nextTopic();
+
+    if (!next && !settings.route) {
+      var startable = (PEBKAC.PLAN.alsoDoing || []);
       return '<section class="card lead">' +
         '<div class="card-head">' + PEBKAC.critter('calico', { size: 'lg', tint: 'lilac', bob: true }) +
           '<h2>Pick a route first</h2></div>' +
-        '<p>Everything else on this site is computed from that one choice, so it is the only thing worth doing right now.</p>' +
+        '<p>The Windows Server exams need that decision before anything can be scheduled — until you choose, nobody knows whether you are studying AZ-800 and AZ-801 or AZ-802.</p>' +
         '<p><button class="primary" data-action="nav" data-view="decision">Show me the three options</button></p>' +
+        (startable.length
+          ? '<hr class="rule">' +
+            '<p><strong>' + esc(startable.join(' and ')) + '</strong> does not depend on that decision at all. ' +
+            'If today is a day for doing work rather than making choices, start there.</p>' +
+            '<p>' + startable.map(function (code) {
+              return '<button class="primary" data-action="focus" data-exam="' + esc(code) + '">Work on ' + esc(code) + ' now</button>';
+            }).join(' ') + '</p>'
+          : '') +
         '</section>' + viewDecisionSummary();
     }
-
-    var next = nextTopic();
 
     if (!next) {
       return '<section class="card lead">' +
@@ -379,6 +436,7 @@
         '</div>' +
         PEBKAC.critter(running ? 'corgi' : buddy, { size: 'lg', seed: next.topic.id, bob: running }) +
       '</div>' +
+      focusSwitcher(next.exam.code) +
       '<p class="meta">' + esc(next.domain.weight) + ' of the exam · about ' +
         plural(next.topic.hours, 'hour') + ' total · currently <strong>' +
         esc(PEBKAC.CONFIDENCE[conf].label) + '</strong></p>' +
@@ -925,6 +983,14 @@
       '<p class="meta">Currently: <strong>' + esc(settings.route || 'not chosen') + '</strong>. ' +
         '<a href="#decision" data-action="nav" data-view="decision">Change it</a></p>' +
 
+      '<h3>Current focus</h3>' +
+      '<p class="meta">"Right now" is drawing from <strong>' +
+        esc(settings.focusExam || 'the route order') + '</strong>.' +
+        (settings.focusExam
+          ? ' <button class="linkish" data-action="focus" data-exam="">Follow the route order instead</button>'
+          : '') +
+      '</p>' +
+
       '<h3>Study order</h3>' +
       '<p class="meta">Your route covers the Windows Server exam. ' +
         esc((PEBKAC.PLAN.alsoDoing || []).join(' + ')) +
@@ -998,6 +1064,12 @@
 
     } else if (action === 'conf') {
       Store.setConfidence(el.getAttribute('data-topic'), Number(el.getAttribute('data-value')));
+      render();
+
+    } else if (action === 'focus') {
+      Store.setSetting('focusExam', el.getAttribute('data-exam') || null);
+      state.view = 'now';
+      location.hash = 'now';
       render();
 
     } else if (action === 'choose-route') {

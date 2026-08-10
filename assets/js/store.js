@@ -60,6 +60,9 @@
         sessionMinutes: PEBKAC.PLAN.sessionMinutes,
         alsoDoingFirst: PEBKAC.PLAN.alsoDoingFirst,
         theme: 'light',
+        /* Which exam "Right now" draws from. null = follow the route order.
+         * Set explicitly when you want to work on one thing in particular. */
+        focusExam: null,
       };
       var saved = read('settings', {});
       for (var k in saved) {

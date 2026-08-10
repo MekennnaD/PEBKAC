@@ -178,6 +178,16 @@ header.top .sub { color: var(--muted); font-size: 0.85rem; margin: 0; }
 .now h2 { font-size: 1.75rem; line-height: 1.25; }
 .meta { color: var(--muted); font-size: 0.88rem; }
 
+.focus { color: var(--muted); font-size: 0.86rem; margin: 10px 0 0; }
+.focus strong { color: var(--text); }
+button.linkish {
+  background: none; border: none; padding: 0; font-size: inherit; font-weight: 600;
+  color: var(--accent); text-decoration: underline; text-underline-offset: 3px;
+}
+button.linkish:hover { border: none; transform: none; filter: brightness(1.15); }
+
+hr.rule { border: none; border-top: 1.5px solid var(--line); margin: 20px 0; }
+
 .timer { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 22px 0; }
 .timer.live { align-items: center; gap: 18px; }
 .clock {
