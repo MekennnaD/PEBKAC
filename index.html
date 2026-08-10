@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PEBKAC</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>⌨️</text></svg>">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <span id="mascot"></span>
+    <h1>PEBKAC</h1>
+    <p class="sub">Problem Exists Between Keyboard And Chair</p>
+    <button id="theme" data-action="theme" title="Switch theme">🌙</button>
+  </header>
+
+  <div id="alert" hidden></div>
+  <nav id="nav"></nav>
+  <main id="main"></main>
+
+  <footer>
+    <div class="footer-critters" id="footer-critters"></div>
+    <p>Objectives are transcribed from the official Microsoft Learn study guides and carry the date they were published. Exams change — if a date here looks old, re-check the source before trusting a plan built on it.</p>
+    <p>Progress is stored in this browser only. Nothing is sent anywhere.</p>
+  </footer>
+
+</div>
+
+<!-- Plain script tags, no modules and no build step, so opening index.html
+     straight off disk works. Load order matters: data, then lib, then app. -->
+<script src="data/certs.js"></script>
+<script src="data/plan.js"></script>
+<script src="data/explore.js"></script>
+<script src="data/goals.js"></script>
+<script src="data/growth.js"></script>
+<script src="assets/js/critters.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/timer.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
